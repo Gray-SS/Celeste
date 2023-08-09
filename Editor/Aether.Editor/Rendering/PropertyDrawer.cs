@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 
 namespace Celeste.Editor.Rendering;
 
@@ -6,7 +7,22 @@ public abstract class PropertyDrawer
 {
     public abstract Type TargetType { get; }
 
-    internal abstract void RenderInternal(object target, PropertyInfo property);
+    protected bool _hasChanged;
+    protected object? _newState;
+
+    public bool ChangeTriggered([NotNullWhen(true)] out object? newState)
+    {
+        newState = _newState;
+        return _hasChanged;
+    }
+
+    protected void TriggerChanges(object newState)
+    {
+        _hasChanged = true;
+        _newState = newState;
+    }
+
+    internal abstract void RenderInternal(int hashCode, object target, PropertyInfo property);
 }
 
 public abstract class PropertyDrawer<T> : PropertyDrawer
@@ -14,34 +30,20 @@ public abstract class PropertyDrawer<T> : PropertyDrawer
 {
     public sealed override Type TargetType => typeof(T);
 
-    private T _changedState;
-    private bool _hasChanged;
+    protected abstract void Render(string id, ref T value);
 
-    public bool ChangeTriggered(out T newState)
-    {
-        newState = _changedState;
-        return _hasChanged;
-    }
-
-    protected void TriggerChanges(T change)
-    {
-        _hasChanged = true;
-        _changedState = change;
-    }
-
-    protected abstract void Render(ref T value);
-
-    internal override void RenderInternal(object target, PropertyInfo property)
+    internal override void RenderInternal(int hashCode, object target, PropertyInfo property)
     {
         if (property.PropertyType != TargetType)
             throw new InvalidOperationException();
 
         _hasChanged = false;
-        _changedState = default;
+        _newState = null;
 
         T value = (T)property.GetValue(target)!;
         var temp = value;
-        Render(ref value);
+        var id = $"##{HashCode.Combine(hashCode, property)}";
+        Render(id, ref value);
 
         if (!temp.Equals(value)) TriggerChanges(value);
     }

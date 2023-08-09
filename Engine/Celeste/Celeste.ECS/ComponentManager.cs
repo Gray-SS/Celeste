@@ -9,14 +9,16 @@ public class ComponentManager
 
     private readonly int m_maxEntities;
 
-    private readonly Dictionary<int, ComponentType> m_componentTypes;
+    private readonly Dictionary<ComponentType, Type> m_livingTypes;
+    private readonly Dictionary<Type, ComponentType> m_componentTypes;
     private readonly Dictionary<ComponentType, IComponentHandler> m_componentHandlers;
 
     public ComponentManager(int maxComponents, int maxEntities)
     {
         m_maxEntities = maxEntities;
 
-        m_componentTypes = new Dictionary<int, ComponentType>(maxComponents);
+        m_livingTypes = new Dictionary<ComponentType, Type>(maxComponents);
+        m_componentTypes = new Dictionary<Type, ComponentType>(maxComponents);
         m_componentHandlers = new Dictionary<ComponentType, IComponentHandler>(maxComponents);
     }
 
@@ -24,6 +26,13 @@ public class ComponentManager
         where T : struct
     {
         var handler = GetComponentHandler<T>();
+        handler.Add(entity, component);
+    }
+
+    public void AddComponent(Entity entity, object component)
+    {
+        var componentType = GetComponentType(component.GetType());
+        var handler = GetComponentHandler(componentType);
         handler.Add(entity, component);
     }
 
@@ -86,10 +95,14 @@ public class ComponentManager
         return handler;
     }
 
+    public Type GetType(ComponentType componentType)
+    {
+        return m_livingTypes[componentType];
+    }
+
     public ComponentType GetComponentType(Type type)
     {
-        var key = type.GetHashCode();
-        if (m_componentTypes.TryGetValue(key, out ComponentType compType))
+        if (m_componentTypes.TryGetValue(type, out ComponentType compType))
             return compType;
 
         throw new InvalidOperationException($"Component type with type '{type.FullName}' doesn't exists");
@@ -97,12 +110,12 @@ public class ComponentManager
 
     public ComponentType GetComponentType<T>()
     {
-        var key = typeof(T).GetHashCode();
-        if (m_componentTypes.TryGetValue(key, out ComponentType type))
+        if (m_componentTypes.TryGetValue(typeof(T), out ComponentType type))
             return type;
 
         var componentType = ComponentType.Create(m_componentTypesCount + 1);
-        m_componentTypes[key] = componentType;
+        m_componentTypes[typeof(T)] = componentType;
+        m_livingTypes[componentType] = typeof(T);
         m_componentTypesCount++;
 
         return componentType;
@@ -112,7 +125,7 @@ public class ComponentManager
         where T : struct
     {
         var key = typeof(T).GetHashCode();
-        if (m_componentTypes.TryGetValue(key, out ComponentType type))
+        if (m_componentTypes.TryGetValue(typeof(T), out ComponentType type))
             return (ComponentHandler<T>)m_componentHandlers[type];
 
         return RegisterComponentHandler<T>();

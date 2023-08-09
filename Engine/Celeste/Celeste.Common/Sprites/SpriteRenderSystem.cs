@@ -35,6 +35,9 @@ public class SpriteRenderSystem : EntitySystem
             ref Sprite sprite = ref Runtime.GetComponent<Sprite>(entity);
             ref Transform transform = ref Runtime.GetComponent<Transform>(entity);
 
+            if (sprite.Texture == null)
+                continue;
+
             var origin = sprite.Texture.Bounds.Size.ToVector2() * 0.5f;
 
             _spriteBatch.Draw(sprite.Texture, transform.Position, null, sprite.Color, transform.Rotation, origin, transform.Scale, 0, 0f);

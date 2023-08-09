@@ -36,6 +36,18 @@ public partial class EcsRuntime
     public void Draw()
         => _systemManager.Render();
 
+    public List<Type> GetAliveComponentTypes()
+    {
+        var types = new List<Type>();
+        foreach (var compType in _componentManager.ComponentTypes)
+        {
+            var type = _componentManager.GetType(compType);
+            types.Add(type);
+        }
+
+        return types;
+    }
+
     public void AddComponent<T>(Entity entity, T component)
         where T : struct
     {
@@ -43,6 +55,14 @@ public partial class EcsRuntime
 
         ref var signature = ref _entityManager.GetSignature(entity);
         signature.Flip(_componentManager.GetComponentType<T>().id);
+    }
+
+    public void AddComponent(Entity entity, object component)
+    {
+        _componentManager.AddComponent(entity, component);
+
+        ref var signature = ref _entityManager.GetSignature(entity);
+        signature.Flip(_componentManager.GetComponentType(component.GetType()).id);
     }
 
     public void RemoveComponent<T>(Entity entity)

@@ -24,6 +24,15 @@ public class DomainEntity
         => _ecsRuntime.AddComponent(Entity, component);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetComponent<T>(T component)
+        where T : struct
+        => _ecsRuntime.SetComponent(Entity, component);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetComponent(object component)
+        => _ecsRuntime.SetComponent(Entity, component);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void RemoveComponent<T>()
         where T : struct
         => _ecsRuntime.RemoveComponent<T>(Entity);
@@ -37,6 +46,9 @@ public class DomainEntity
     public bool HasComponent<T>()
         where T : struct
         => _ecsRuntime.HasComponent<T>(Entity);
+
+    public void AddComponent(object component)
+        => _ecsRuntime.AddComponent(Entity, component);
 
     public IEnumerable<object> GetComponents()
         => _ecsRuntime.GetComponents(Entity);

@@ -4,19 +4,16 @@ using Microsoft.Xna.Framework.Graphics;
 using Celeste.Common;
 using Celeste.ECS;
 using Celeste.Common.Sprites;
-using Celeste.Editor.Utils;
 using Celeste.ImGuiNET;
 
 namespace Celeste.Editor;
 
 public class EditorGameLogic : GameLogic
 {
-    public EditorRuntime Runtime { get; }
+    public EditorRuntime Editor { get; }
 
     private ImGuiManager _gui = null!;
     private RenderTarget2D _renderTarget = null!;
-
-    private DomainEntity? selectedEntity;
 
     internal static EditorGameLogic Instance { get; private set; } = null!;
 
@@ -25,7 +22,7 @@ public class EditorGameLogic : GameLogic
         Instance = this;
         IsMouseVisible = true;
 
-        Runtime = new EditorRuntime(this);
+        Editor = new EditorRuntime(this);
     }
 
     protected override void Initialize()
@@ -33,7 +30,7 @@ public class EditorGameLogic : GameLogic
         base.Initialize();
 
         var cameraEntity = EcsRuntime.PerformQuery<Camera>().Single();
-        Runtime.BindEntity("Camera", cameraEntity);
+        Editor.BindEntity("Camera", cameraEntity);
 
         _gui = new ImGuiManager(this);
         _renderTarget = new RenderTarget2D(GraphicsDevice, 1280, 720);
@@ -49,7 +46,7 @@ public class EditorGameLogic : GameLogic
         var texture = new Texture2D(GraphicsDevice, 1, 1);
         texture.SetData(new Color[] { Color.White });
 
-        var domainEntity = Runtime.CreateEntity("Test");
+        var domainEntity = Editor.CreateEntity("Test");
         domainEntity.AddComponent(new Sprite(texture, Color.Orange));
         domainEntity.AddComponent(new Transform { Scale = new Vector2(100, 100) });
     }
@@ -77,7 +74,7 @@ public class EditorGameLogic : GameLogic
         ShowGameWindow();
         ShowAssetsWindow();
         ShowInspectorWindow();
-        ShowPropertiesWindow();
+        Editor.DrawPropertiesWindow();
 
         EndDockspace();
 
@@ -93,19 +90,20 @@ public class EditorGameLogic : GameLogic
         var canShowCreatePopup = true;
 
         var count = 0;
-        foreach (var entity in Runtime.Entities)
+        foreach (var entity in Editor.Entities)
         {
             if (ImGui.Selectable(entity.Name, selected == count))
             {
                 selected = count;
-                selectedEntity = entity;
+                Editor.EntitySelection.Clear();
+                Editor.EntitySelection.Add(entity);
             }
 
             if (ImGui.BeginPopupContextItem())
             {
                 if (ImGui.MenuItem("Delete"))
                 {
-                    Runtime.DestroyEntity(entity);
+                    Editor.DestroyEntity(entity);
                 }
 
                 canShowCreatePopup = false;
@@ -120,7 +118,7 @@ public class EditorGameLogic : GameLogic
         {
             if (ImGui.BeginMenu("Create"))
             {
-                if (ImGui.MenuItem("Empty")) Runtime.CreateEntity("Empty");
+                if (ImGui.MenuItem("Empty")) Editor.CreateEntity("Empty");
             }
 
             ImGui.EndPopup();
@@ -128,22 +126,7 @@ public class EditorGameLogic : GameLogic
 
         ImGui.End();
 
-        Runtime.ApplyChanges();
-    }
-
-    private void ShowPropertiesWindow()
-    {
-        ImGui.Begin("Properties");
-
-        if (selectedEntity != null)
-        {
-            foreach (var component in selectedEntity.GetComponents())
-            {
-                ImGuiUtils.DrawComponentProperties(EcsRuntime, selectedEntity.Entity, component);
-            }
-        }
-
-        ImGui.End();
+        Editor.ApplyChanges();
     }
 
     private void ShowAssetsWindow()

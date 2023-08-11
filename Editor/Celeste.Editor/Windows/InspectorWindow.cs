@@ -1,4 +1,5 @@
-﻿using Celeste.ImGuiNET;
+﻿using Celeste.ECS;
+using Celeste.ImGuiNET;
 using ImGuiNET;
 
 namespace Celeste.Editor.Windows;
@@ -18,11 +19,10 @@ public class InspectorWindow : EditorWindow
         var canShowCreatePopup = true;
 
         var count = 0;
-        var selectedEntity = Runtime.EntitySelection.FirstOrDefault();
 
         foreach (var entity in Runtime.Entities)
         {
-            if (ImGui.Selectable(entity.Name, selectedEntity == entity) && selectedEntity != entity)
+            if (ImGui.Selectable(entity.Name))
             {
                 var win = Runtime.GetWindow<PropertiesWindow>();
                 win.SetTarget(entity);

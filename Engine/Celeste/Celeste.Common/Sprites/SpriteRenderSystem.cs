@@ -27,7 +27,7 @@ public class SpriteRenderSystem : EntitySystem
 
         graphicsDevice.Clear(camera.ClearColor);
 
-        _spriteBatch.Begin(transformMatrix: cameraMatrix);
+        _spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, cameraMatrix);
 
         query = Runtime.PerformQuery<Sprite, Transform>();
         foreach (var entity in query)

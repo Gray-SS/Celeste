@@ -5,6 +5,8 @@ namespace Celeste.Editor.Windows;
 
 public class PropertiesWindow : EditorWindow
 {
+    public object? Target => _target;
+
     private object? _target;
     private IObjectVisualizer? _currentRenderer;
 

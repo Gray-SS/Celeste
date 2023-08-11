@@ -12,7 +12,7 @@ public class GameLogic : Game
     public EcsRuntime EcsRuntime { get; private set; } = null!;
     public SpriteBatch SpriteBatch { get; private set; } = null!;
 
-    internal static GameLogic Instance { get; private set; } = null!;
+    public static GameLogic Instance { get; private set; } = null!;
 
     public GameLogic()
     {
